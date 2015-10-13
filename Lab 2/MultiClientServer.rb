@@ -1,4 +1,9 @@
 require 'socket'
+require 'thread'
+require 'pool'
+
+new_pool = pool.new(10)
+puts ("New Threadpool Created\n")
 
 server = TCPServer.new (2000)
 puts ("Server Started:  ")
