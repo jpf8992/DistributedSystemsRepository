@@ -3,8 +3,8 @@ require 'socket'
 s = TCPSocket.new("localhost",2000)
 
 	#Send message to server
-	s.puts("KILL_SERVIC\n")
-	puts "KILL_SERVIC\n"
+	s.puts("HELO\n")
+	puts "HELO\n"
 	#sleep rand(5) + 2
 	#Read message from server
 	#servermessage = s.gets
