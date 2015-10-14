@@ -1,10 +1,40 @@
+
+
 require 'socket'
 require 'thread'
 require_relative 'sample_thread_pool'		#This contains the pool class as required to implement thread pooling
 
+# class Pool
+# def initialize(size)
+# @size = size
+# @jobs = Queue.new
+# @pool = Array.new(@size) do |i|
+      # Thread.new do
+        # Thread.current[:id] = i
+# catch(:exit) do
+# loop do
+# job, args = @jobs.pop
+            # job.call(*args)
+          # end
+        # end
+      # end
+    # end
+  # end
+  # def schedule(*args, &block)
+  # @jobs << [block, args]
+  # end
+  # def shutdown
+  # @size.times do
+      # schedule { throw :exit }
+    # end
+  # @pool.map(&:join)
+  # end
+# end
+  
+
 #Initialise thread pool using 'Pool' class 
 numthreads = 10	#Specify # of threads to carry out operation
-new_thread = Pool.new(numthreads)	#Thread Pool Constructor
+new_pool = Pool.new(numthreads)	#Thread Pool Constructor
 puts "New Threadpool Created with  #{numthreads} threads\n"
 
 
@@ -13,42 +43,28 @@ portnumber = 2000
 server = TCPServer.new (portnumber)
 puts ("Server Created:  ")
 
-#Loop until requested to terminate
-#while ( soc = server.accept)
-loop{	#server loops forever
-#Test message
-#puts "Server Running" 
-
-	#soc = server.accept
-
+loop do	 #server loops forever
+	connect = server.accept
+	line = connect.gets
 	#Create a thread schedule block
-	new_thread.schedule do  	#Schedule a new task
-		#puts "Thread Started"
-		while connection = server.accept
-			while line = connection.gets
-				if line == "KILL_SERVICE\n"
-				puts line
-				connection.puts "Kill Received"
-				else 
-				
-				puts "No Kill"
-				
-				end
-			end	
-				connection.puts "Closing Connection"
-				connection.close
+	puts connect.gets
+	new_pool.schedule do  	#Schedule a new task to a thread
+		#puts "In Thread"
+
+		if line == "KILL_SERVICE\n"					#line.include		#message contained in string
+			#connect.puts "Kill_Received"
+			#puts line
+			abort("Server Aborted - Connections Forced Closed")	#Shut down server
+		else 
+			puts "No Kill"	
 		end
 	end
-	
-	
-	#puts "Thread Ended"
-	#end
-	#new_thread.shutdown
-#end
-	 
-}
+	#close connection with client 
+	#sleep(3)	#Prevent race conditions
+	connect.close
+	puts "Connection Closed"
+end
 
-#at_exit { p.shutdown }
 server.close
 puts "Server is Closed..."
 
@@ -73,18 +89,3 @@ puts "Server is Closed..."
 
 
 
-
-
-# Retrieve message and output to terminal
-					# clientmessage = soc.gets
-					# soc.puts clientmessage
-					# puts clientmessage	#output to terminal
-					
-					# break if clientmessage == "KILL_SERVICE\n"
-					
-					
-					# if clientmessage == "KILL_SERVICE\n"
-						
-						# puts "KILL MESSAGE WAS RECEIVED\n SERVER IS CLOSING..."
-						# new_thread.shutdown #shut down threads gracefully
-						# break
