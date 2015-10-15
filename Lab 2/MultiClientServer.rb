@@ -10,11 +10,15 @@ numthreads = 10	#Specify # of threads to carry out operation
 new_pool = Pool.new(numthreads)	#Thread Pool Constructor
 puts "New Threadpool Created with  #{numthreads} threads\n"
 
+portnumber = ARGV.first
+puts "Protnumber: #{portnumber}"
+Integer(portnumber)
 
 #Create a new TCP Socket Server
-portnumber = 2000
+#portnumber = 2000
 server = TCPServer.new (portnumber)
 puts ("Server Created:  ")
+
 
 addr_infos = Socket.ip_address_list	#IP address to return to client
 
