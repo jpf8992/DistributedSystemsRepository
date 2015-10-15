@@ -1,7 +1,5 @@
-
+set portnum=%arg1%
 @echo off
-set /p id="Enter Port Number: "
 cd %cd%
-
-ruby MultiClientServer.rb %id%
+ruby MultiClientServer.rb %portnum%
 pause
