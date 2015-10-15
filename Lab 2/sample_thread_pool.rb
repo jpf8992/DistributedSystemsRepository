@@ -1,3 +1,5 @@
+#Taken From: http://www.burgestrand.se/code/ruby-thread-pool/
+
 # Ruby Thread Pool
 # ================
 # A thread pool is useful when you wish to do some work in a thread, but do
