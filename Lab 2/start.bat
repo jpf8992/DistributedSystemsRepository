@@ -1,4 +1,4 @@
-set portnum=%arg1%
+set portnum=%1%
 @echo off
 cd %cd%
 ruby MultiClientServer.rb %portnum%
