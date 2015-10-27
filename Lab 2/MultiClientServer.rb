@@ -38,11 +38,11 @@ loop do	 #server loops forever
 		if line == "KILL_SERVICE\n"					
 			abort("Server Aborted - Connections Forced Closed \n")	#Shut down server
 		elsif line.initial ==  "HELO"		#True only if the first four letters are 'HELO' (which are isolated by the .initial from SocketString Class) 
-			#connect.puts "#{line}"+"IP:"+"#{ip}"+"Port:#{portnumber}"+"StudentID:#{StudentID}"
-			connect.print "HELO text\n"
-			connect.print "IP:[ip address]\n"
-			connect.print "Port:[port number]\n"
-			connect.print "StudentID:[your student ID]\n"
+			connect.puts "#{line}"+"IP:"+"#{ip}"+"Port:#{portnumber}"+"StudentID:#{StudentID}"
+			#connect.print "HELO text\n"
+			#connect.print "IP:[ip address]\n"
+			#connect.print "Port:[port number]\n"
+			#connect.print "StudentID:[your student ID]\n"
 			
 		else 
 				puts "Message Not Processed?? \n"
