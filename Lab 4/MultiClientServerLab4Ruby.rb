@@ -17,9 +17,9 @@ class Server
   def run
     loop {
       Thread.start(@server.accept) do | client |
-        #nick_name = client.gets.chomp.to_sym
-		message = connect.gets
-		puts message
+        nick_name = client.gets.chomp.to_sym
+		#message = connect.gets
+		#puts message
 		
         @connections[:clients].each do |other_name, other_client|
           if nick_name == other_name || client == other_client
@@ -47,4 +47,4 @@ class Server
   end
 end
 
-Server.new( 8090, "134.226.32.10" )
+Server.new(2000, "localhost" )
