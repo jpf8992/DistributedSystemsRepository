@@ -27,6 +27,10 @@ class Server
 		
 		puts "Server Started"
 		puts $studentID
+		
+		#Variables - keep track of rooms and connected clients
+		joinID =0
+		
 		#Initialise thread pool using 'Pool' class 
 		#numthreads = 10	#Specify # of threads to carry out operation
 		#new_pool = Pool.new(numthreads)	#Thread Pool Constructor
@@ -67,7 +71,9 @@ class Server
 						puts port
 						client.puts "#{message}"+"IP:"+"#{hostname}\n"+"Port:#{port}\n"+"StudentID:#{$studentID}\n"
 					elsif	message.include?"JOIN_CHATROOM" 	#Join Request
-							
+						
+
+						
 						#puts message
 						puts "xxx"	
 						#ENSURE THAT YOU ONLY EXTRACT THE RELEVANT DETAILS FROM MESSAGE!!!!
@@ -80,30 +86,44 @@ class Server
 						message = client.gets
 						clientName = message[12...-1] 	#Fourth Line - CLIENT_NAME: [string Handle to identifier client user]
 						
+						
 						#Check the values assigned to variables
 						#puts ChatName 
 						#puts ClientIP
 						#puts PortNum
 						#puts ClientName
 						
+						roomReference = chatName.sum	#Create a unique number from the chatName
+						joinID += 1 
+						
+						
 						#Send Message Confirmation to Client
 						client.puts "JOINED_CHATROOM:"+"#{chatName}"+"\n"
 						client.puts "SERVER_IP:"+ "#{hostname}" + "\n"
 						client.puts "PORT:"+ "#{port}" + "\n"
-						client.puts "ROOM_REF:"+ "#{123}" + "\n"
-						client.puts "JOIN_ID:"+ "#{321}" + "\n"
+						client.puts "ROOM_REF:"+ "#{roomReference}" + "\n"		#stays at 0
+						client.puts "JOIN_ID:"+ "#{joinID}" + "\n"				#increments each time
 						
 						#Indicate Client has joined Chatroom
-						@connections[:clients].each do |other_name, other_client|
-						  if clientName == other_name || client == other_client
-							client.puts "This username already exist"
-							Thread.kill self
-						  end
-						end
+						#@connections[:clients].each do |other_name, other_client|
+						#  if clientName == other_name || client == other_client
+						#	client.puts "This username already exist"
+						#	Thread.kill self
+						#  end
+						#end
+						
+						
+						
 						
 						puts "#{clientName} #{client}"
 						@connections[:clients][clientName] = client
-						client.puts "CHAT:d"
+						@connections[:rooms][roomReference] = client
+						
+						
+						
+						client.puts "CHAT: " + "#{roomReference}" +" client " "#{clientName}" +"has joined" + "\n"
+						#client.puts "CHAT: " + "#{roomReference}" + " - Client: " + "#{joinID}" + "has joined" + "\n"
+						
 						listen_user_messages( clientName, client )
 					else
 					
