@@ -61,26 +61,24 @@ class Server
 				Thread.start(@server.accept) do | client |
 				
 					message = client.gets
-					puts message
+					#puts message
 					
 					if message.include?"KILL_SERVICE"		
 						puts "Kill received"
 						abort("Server Aborted - Connections Forced Closed ")	#Shut down server
 					elsif	message.initial ==  "HELO"		
-						
 						puts port
 						client.puts "#{message}"+"IP:"+"#{hostname}\n"+"Port:#{port}\n"+"StudentID:#{$studentID}\n"
 					elsif	message.include?"JOIN_CHATROOM" 	#Join Request
-						
-
-						
 						#puts message
-						puts "xxx"	
+						puts "xxxc"	
+						
+						
 						#ENSURE THAT YOU ONLY EXTRACT THE RELEVANT DETAILS FROM MESSAGE!!!!
 						#Process Join Request	
 						chatName = message[14...-1]		#First Line - JOIN_CHATROOM: [chatroom name]
 						message = client.gets
-						clientIP = message[10...-1] 		#Second Line - CLIENT_IP: [IP Address of client if UDP | 0 if TCP]
+						clientIP = message[10...-1] 	#Second Line - CLIENT_IP: [IP Address of client if UDP | 0 if TCP]
 						message = client.gets
 						portNum = message[5...-1] 		#Third Line - PORT: [port number of client if UDP | 0 if TCP]
 						message = client.gets
@@ -101,7 +99,7 @@ class Server
 						client.puts "JOINED_CHATROOM:"+"#{chatName}"+"\n"
 						client.puts "SERVER_IP:"+ "#{hostname}" + "\n"
 						client.puts "PORT:"+ "#{port}" + "\n"
-						client.puts "ROOM_REF:"+ "#{roomReference}" + "\n"		#stays at 0
+						client.puts "ROOM_REF:"+ "#{roomReference}" + "\n"		
 						client.puts "JOIN_ID:"+ "#{joinID}" + "\n"				#increments each time
 						
 						#Indicate Client has joined Chatroom
@@ -113,15 +111,22 @@ class Server
 						#end
 						
 						
-						
-						
-						puts "#{clientName} #{client}"
+												
+						puts "Client name #{clientName} Socket#{client}"
 						@connections[:clients][clientName] = client
 						@connections[:rooms][roomReference] = client
 						
+						#Print out clients in the room
+						@connections[:rooms].each do |roomReference|
+						puts client
+						end
 						
+						client.puts  "CHAT:#{roomReference}\n"
+						client.puts "CLIENT_NAME:#{clientName}\n"
+						#client.puts  "CHAT:494" +" client " "#{clientName}" +"has joined" + "\n"
 						
-						client.puts "CHAT: " + "#{roomReference}" +" client " "#{clientName}" +"has joined" + "\n"
+						puts "CHAT:#{roomReference}" +" client " "#{clientName}" +"has joined" + "\n"
+						
 						#client.puts "CHAT: " + "#{roomReference}" + " - Client: " + "#{joinID}" + "has joined" + "\n"
 						
 						listen_user_messages( clientName, client )
