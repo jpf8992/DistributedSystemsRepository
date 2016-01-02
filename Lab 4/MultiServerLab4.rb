@@ -70,9 +70,6 @@ class Server
 						puts port
 						client.puts "#{message}"+"IP:"+"#{hostname}\n"+"Port:#{port}\n"+"StudentID:#{$studentID}\n"
 					elsif	message.include?"JOIN_CHATROOM" 	#Join Request
-						#puts message
-						puts "xxxc"	
-						
 						
 						#ENSURE THAT YOU ONLY EXTRACT THE RELEVANT DETAILS FROM MESSAGE!!!!
 						#Process Join Request	
@@ -83,8 +80,7 @@ class Server
 						portNum = message[5...-1] 		#Third Line - PORT: [port number of client if UDP | 0 if TCP]
 						message = client.gets
 						clientName = message[12...-1] 	#Fourth Line - CLIENT_NAME: [string Handle to identifier client user]
-						
-						
+												
 						#Check the values assigned to variables
 						#puts ChatName 
 						#puts ClientIP
@@ -93,8 +89,7 @@ class Server
 						
 						roomReference = chatName.sum	#Create a unique number from the chatName
 						joinID += 1 
-						
-						
+											
 						#Send Message Confirmation to Client
 						client.puts "JOINED_CHATROOM:"+"#{chatName}"+"\n"
 						client.puts "SERVER_IP:"+ "#{hostname}" + "\n"
@@ -110,8 +105,6 @@ class Server
 						#  end
 						#end
 						
-						
-												
 						puts "Client name #{clientName} Socket#{client}"
 						@connections[:clients][clientName] = client
 						@connections[:rooms][roomReference] = client
@@ -121,15 +114,20 @@ class Server
 						puts client
 						end
 						
-						client.puts  "CHAT:#{roomReference}\n"
-						client.puts "CLIENT_NAME:#{clientName}\n"
+						#client.puts  "CHAT:#{roomReference}\n"
+						#client.puts "CLIENT_NAME:#{clientName}\n"
 						#client.puts  "CHAT:494" +" client " "#{clientName}" +"has joined" + "\n"
 						
-						puts "CHAT:#{roomReference}" +" client " "#{clientName}" +"has joined" + "\n"
+						#puts "CHAT:#{roomReference}" +" client " "#{clientName}" +"has joined" + "\n"
 						
 						#client.puts "CHAT: " + "#{roomReference}" + " - Client: " + "#{joinID}" + "has joined" + "\n"
 						
-						listen_user_messages( clientName, client )
+						#listen_user_messages( clientName, client )
+					elsif message.include?"CHAT"
+					
+						puts"MESSAGE RECEIVED!!!"
+					
+					
 					else
 					
 						puts "Message Not Processed?? \n"
@@ -145,10 +143,12 @@ class Server
 			}.join
 	end
 	
-	def listen_user_messages( username, client )
+	def listen_user_messages( username, client ) # (client_name, tcp_port)
 		loop {
 		  msg = client.gets.chomp
-		  @connections[:clients].each do |other_name, other_client|
+		  #@connections[:clients].each do |other_name, other_client|
+		  @connections[:clients].each do |room_name, other_client|
+		  
 			unless other_name == username
 			  other_client.puts "#{username.to_s}: #{msg}"
 			end

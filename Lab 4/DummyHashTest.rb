@@ -22,6 +22,6 @@ puts connections
 
 
 
-connections[:rooms].each do |client,room_name|
+connections[:rooms].each do |f,client|
 	puts client
 end

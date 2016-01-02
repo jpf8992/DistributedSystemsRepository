@@ -3,33 +3,24 @@
 #Adapted From: https://gist.github.com/torsten/74107
 
 require 'socket'
+require 'uri'
 
+#file open,close read and write requests
 
-#Recognised Commands
-#Read
-#Write
-#Open
-#Close
-
-class Proxy
-
- def run port
+class Proxy  
+  def run port
     begin
-     # Start our server to handle connections (will raise things on errors)
-      @socket = TCPServer.new port
-      	puts "Server Started with port: #{port}\n"
-		 
-	  # Handle every request in another thread
-      loop do
-	  
-		
-		puts "Please Specify Command\n"
-		puts "Available Commands: <Read~filename>...<Write~filename>...<Close~filename>...<Open~filename>"
-		instruction = gets.chomp
-		puts "instruction: #{instruction}"
-        s = @socket.accept
-        Thread.new s, &method(:handle_request)
-      end
+	  @server = TCPServer.open('localhost', port )
+      # Start our server to handle connections (will raise things on errors)
+      #@socket = TCPServer.new port
+      puts "Client Server Started with port #{port}"
+      # Handle every request in another thread
+      loop{
+			Thread.start(@server.accept) do | client |
+				puts "Handling Request"
+				handle_request client
+		end
+      }.join
       
     # CTRL-C
     rescue Interrupt
@@ -45,7 +36,9 @@ class Proxy
   end
   
   def handle_request to_client
-    request_line = to_client.readline
+	puts "In Handle"
+	message = to_client.gets
+    puts "Request #{message}"
     
     verb    = request_line[/^\w+/]
     url     = request_line[/^\w+\s+(\S+)/, 1]
@@ -83,7 +76,12 @@ class Proxy
       end
     end
     
-    
+    buff = ""
+    loop do
+      to_server.read(4048, buff)
+      to_client.write(buff)
+      break if buff.size < 4048
+    end
     
     # Close the sockets
     to_client.close
@@ -93,6 +91,14 @@ class Proxy
 end
 
 
-#Running Client
-#Create a proxy
+# Get parameters and start the server
+if ARGV.empty?
+  port = 8008
+elsif ARGV.size == 1
+  port = ARGV[0].to_i
+else
+  puts 'Usage: proxy.rb [port]'
+  exit 1
+end
+
 Proxy.new.run 2050
