@@ -6,7 +6,10 @@ server = TCPServer.new(port)   # Socket to listen on port 2010
 puts "Directory Server Created on #{port}"
 loop {                          # Servers run forever
   Thread.start(server.accept) do |client|
-    client.puts(Time.now.ctime) # Send the time to the client
+    
+	message = client.gets
+	puts "Received message from Client: #{message}"
+	client.puts(Time.now.ctime) # Send the time to the client
 	client.puts "Closing the connection. Bye!"
     client.close                # Disconnect from the client
   end

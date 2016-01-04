@@ -19,7 +19,7 @@ class Proxy
 			Thread.start(@server.accept) do | client |
 				puts "Handling Request"
 				handle_request client
-		end
+			end
       }.join
       
     # CTRL-C
@@ -36,10 +36,22 @@ class Proxy
   end
   
   def handle_request to_client
+	
+	
 	puts "In Handle"
 	message = to_client.gets
-    puts "Request #{message}"
+    #puts "Request #{message}"
     
+	#Send Message to Directory Server that you want to Read a file
+	if message.include?"read"
+		puts "Processing Read Request"
+		to_dir_server = TCPSocket.open('localhost', 2010 )
+		to_dir_server.puts "I want to find a file"
+		dir_response = to_dir_server.gets
+		puts "Directory Server Response: #{dir_response}"
+		to_dir_server.close
+	end
+	
     verb    = request_line[/^\w+/]
     url     = request_line[/^\w+\s+(\S+)/, 1]
     version = request_line[/HTTP\/(1\.\d)\s*$/, 1]
