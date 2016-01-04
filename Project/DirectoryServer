@@ -1,4 +1,8 @@
-#Directory Server
+#--Directory Server--#
+
+#What should the Directory Server do?
+#A user request to open a particular file X should be passed by the client proxy to the directory server for resolution. The returned file identifier should identify the server actually holding the file (or perhaps, servers, if you have decided to expose replication to client proxies) and the name of the file on that server.
+
 
 require 'socket'                # Get sockets from stdlib
 currentDir = Dir.pwd			#Current Directory 
@@ -7,22 +11,40 @@ server = TCPServer.new(port)   	# Socket to listen on port 2010
 puts "Directory Server Created on #{port}"
 loop {                          # Servers run forever
   Thread.start(server.accept) do |client|
-    #files = entries(currentDir)
-	Dir.foreach(currentDir) {|x| puts "Got #{x}" } #list all files in current dirctory
-		
+    
+	#Process incoming message from client
 	message = client.gets
-		
 	puts "Received message from Client: #{message}"
 	filename = message.partition('_').last.delete!("\n")	#remove return character from string
-	file_exist = File.exists?(File.join(currentDir,filename))
-		
-	puts "#{filename} exists (True/False):  #{file_exist}"
-	if file_exist
-		puts "File is in the folder"
 	
-	else 
-		puts "File NOT in folder"
+	
+	#List of all Folders accessible by the network - for this project, it is assumed the scope is the current directory.
+	system_folders = Dir.entries(currentDir).select {|entry| File.directory? File.join(currentDir,entry) and !(entry =='.' || entry == '..') }
+	puts "type: #{system_folders.class}"
+	
+	#Iterate through each folder to find file
+	system_folders.each do |storage, idx|								#########################Stopped here, finding particular file
+		puts "Contents: #{storage} in ID: #{idx}"
+		
+		puts File.join(currentDir,storage,filename)
+		#target_file = currentDir+system_folders[i]+filename
+		#puts target_file
+		#puts "#{File.join(currentDir,system_folders[i],filename)}"
+		#C:\Users\James\Documents\GitHub\DistributedSystemsRepository\Project\TestDir1
+		file_exist = File.exists?(File.join(currentDir,storage,filename))
+			
+		puts "#{filename} exists (True/False):  #{file_exist}"
+		if file_exist
+			puts "File is in the System"
+		
+		else 
+			puts "File NOT in System"
+		end
 	end
+	
+	
+	
+	
     client.close                # Disconnect from the client
   end
 }
