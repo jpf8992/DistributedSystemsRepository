@@ -1,0 +1,30 @@
+#Server1000
+server_name = "Server1000"
+require 'socket'        
+currentDir = File.join(Dir.pwd,server_name)	#This is this represents the folder that this server has access to.
+port = 1000									#Arbitrary port for Storage Server
+server = TCPServer.new(port)   
+puts "Storage ServerCreated on port: #{port}"
+loop {                    # Servers run forever
+  
+	Thread.start(server.accept) do |client|
+    
+	#Process incoming message from client
+	message = client.gets
+	puts "Received message from Client: #{message}"
+	filename = message.partition('_').last.delete!("\n")	#remove return character from string
+	
+	#List of all Folders accessible by the network - for this project, it is assumed the scope is the current directory.
+	#system_folders = Dir.entries(currentDir).select {|entry| File.directory? File.join(currentDir,entry) and !(entry =='.' || entry == '..') }
+	#puts "type: #{system_folders.class}"
+	
+	
+	end
+	
+	
+	
+	#puts "Disconnecting From Client..."
+    #client.close                # Disconnect from the client
+	#puts "Connection Closed!"
+  
+}

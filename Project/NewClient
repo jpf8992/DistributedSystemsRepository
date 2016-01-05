@@ -12,18 +12,32 @@ class Proxy
 			puts "Action Specified: #{user_request}"
 						
 			#Handle Request as long as its valid!
-			if user_request!= "INVALID"
+			if !(user_request.include?"INVALID")
 				puts "Handling Request"
 				dir_socket = TCPSocket.open('localhost',2010)   # Socket to listen on port 2010 - Default Dir Server Port
 				dir_socket.puts user_request
 				
-				#handle_request user_request
-			
+				#Hanlde response from Dir server - should be location of file(if it exists)
+				dir_message = handle_request dir_socket	#pass socket into requests handler
+				dir_socket.close
+				puts "Dir message : #{dir_message}"
+				
+				#Query the Storage Server that holds your desired file
+				if !(dir_message.include?"INVALID")
+					puts "Establishing Connection with Storage Server ..."
+					storage_port = dir_message[-5..-1].delete!("\n")
+					puts "Server Port: #{storage_port}"
+					storage_socket = TCPSocket.open('localhost',storage_port)
+					storage_socket.puts "Hello!!"
+					
+				else
+					puts "Directory Response: No Valid File!"
+				end
 			else
 				puts "Request Invalid,\n Please Specify Valid Command!"
 			end
-      }.join
-# CTRL-C
+      }#.join
+	# CTRL-C
     rescue Interrupt
       puts 'Got Interrupt..'
     # Ensure that we release the socket on errors
@@ -36,27 +50,22 @@ class Proxy
     end
   end
   
-  def handle_request to_client
+  def handle_request socket		#pass the socket stream
 	puts "In Handle"
-	message = to_client.gets
-    #puts "Request #{message}"
+	message = socket.gets		#get message
     
-	#Send Message to Directory Server that you want to Read a file
-	if message.include?"read"
-		puts "Processing Read Request"
-		to_dir_server = TCPSocket.open('localhost', 2010 )
-		to_dir_server.puts "I want to find a file"
-		dir_response = to_dir_server.gets
-		puts "Directory Server Response: #{dir_response}"
-		to_dir_server.close
+		if message.include?"No Such File or Directory"
+			puts "File Does Not Exist"
+			return "INVALID"
+		else
+			puts "Dir Server Response: #{message}"
+			return message
+		end
 	end
-	
-    
-  end
   
   #Handle user Requests and return an interpretable instruction for the proxy
   def gen_request 
-	puts "Please Specify Command\n"
+	puts "\nPlease Specify Command\n"
 	puts "Available Commands:\n <Read~filename>...\n<Write~filename>...\n<Close~filename>...\n<Open~filename>\n"
 	puts "Specify Command:  "
 	input_message = gets.downcase	#take user input from keyboard -> convert lowercase
@@ -77,6 +86,8 @@ class Proxy
 	elsif input_message.include?"close"
 		puts "Processing Close Request"
 		message = "CLOSE"	
+	elsif (file=="")
+		message = "INVALID"
 	else
 		#puts"Message cannot be interpreted!"
 		message = "INVALID"
@@ -91,7 +102,7 @@ end
 #New Client
 require 'socket'      # Sockets are in standard library
 hostname = 'localhost'
-port = 2050
+port = 3000
 #Create Client Proxy to Handle Communications
 Proxy.new.run port
 
