@@ -9,14 +9,26 @@ loop {                    # Servers run forever
   
 	Thread.start(server.accept) do |client|
     
-	#Process incoming message from client
-	message = client.gets
-	puts "Received message from Client: #{message}"
-	filename = message.partition('_').last.delete!("\n")	#remove return character from string
+	#Process incoming request from client
+	requested_file = client.gets
+	puts "Received message from Client: #{requested_file}"
+	filename = requested_file.partition('_').last.delete!("\n")	#remove return character from string
+	puts "Current Dir: #{currentDir}"
+	#List of all Folders accessible server - scope is the Server1000 folder .
+	system_folders = Dir.entries(currentDir).select {|entry| File.join(currentDir,entry) and !(entry =='.' || entry == '..') }
+	system_folders.each do |files|
+		
+		####Checking if the file exists from the server perspective!!!!!!!!!!!!!
+		
+		puts "File: #{files}"
+		puts "f1#{File.join(currentDir,requested_file)}"
+		#puts "f2#{File.join(currentDir,filename)}"
+		
+		file_exist = File.exists?(File.join(currentDir,requested_file))#flag to determine if file exists
+		puts "#{filename} exists (True/False):  #{file_exist}"
+		
+	end
 	
-	#List of all Folders accessible by the network - for this project, it is assumed the scope is the current directory.
-	#system_folders = Dir.entries(currentDir).select {|entry| File.directory? File.join(currentDir,entry) and !(entry =='.' || entry == '..') }
-	#puts "type: #{system_folders.class}"
 	
 	
 	end

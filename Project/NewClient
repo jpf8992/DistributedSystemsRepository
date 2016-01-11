@@ -28,7 +28,11 @@ class Proxy
 					storage_port = dir_message[-5..-1].delete!("\n")
 					puts "Server Port: #{storage_port}"
 					storage_socket = TCPSocket.open('localhost',storage_port)
-					storage_socket.puts "Hello!!"
+					
+					#determine the file the client wants to access
+					filename = user_request.partition('_') [2]
+					puts "filename: #{filename}"
+					storage_socket.puts filename
 					
 				else
 					puts "Directory Response: No Valid File!"
