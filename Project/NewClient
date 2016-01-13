@@ -34,6 +34,46 @@ class Proxy
 					puts "filename: #{filename}"
 					storage_socket.puts filename
 					
+					#read server response
+					storage_response = storage_socket.gets
+					puts "Storage Response: #{storage_response}"
+					
+					#Handle command e.g. read/write/open etc.
+					
+					command = user_request.partition('_') [0]
+					puts "Command:#{command}"
+					
+					if command == 'READ'
+						
+						puts "double Check: Command is READ"
+						puts "Reading File"
+						File.open(storage_response.delete!("\n"), "r") do |f|
+						  f.each_line do |line|
+							puts line
+						  end
+						end
+						puts "Closing File!"
+					elsif command == 'OPEN'
+						puts "double Check: Command is OPEN"
+						puts "Opening File"
+						File.open(storage_response.delete!("\n"), "r")
+					else command == 'WRITE'
+						puts "double Check: Command is WRITE\n"
+						puts "Please Specify the new contents of the file:..."
+						new_content = gets
+						puts "Writing to File"
+						time1 = Time.new
+						File.open(storage_response.delete!("\n"), "w"){ |file| file.write("#{new_content} with timestamp - #{time1.inspect}") }
+						wri = File.readable?(storage_response.delete!("\n"))
+						puts "Writable: #{wri}"
+						puts "Finished Writing to File.\n File Closed."
+						
+						
+						
+						
+					end
+					
+					
 				else
 					puts "Directory Response: No Valid File!"
 				end

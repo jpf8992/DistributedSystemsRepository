@@ -1,4 +1,5 @@
 #Server1000
+require 'pathname'
 server_name = "Server1000"
 require 'socket'        
 currentDir = File.join(Dir.pwd,server_name)	#This is this represents the folder that this server has access to.
@@ -16,18 +17,28 @@ loop {                    # Servers run forever
 	puts "Current Dir: #{currentDir}"
 	#List of all Folders accessible server - scope is the Server1000 folder .
 	system_folders = Dir.entries(currentDir).select {|entry| File.join(currentDir,entry) and !(entry =='.' || entry == '..') }
-	system_folders.each do |files|
+	
+	file_loc = File.join(currentDir,requested_file)
+	puts "File Location: #{file_loc}"
+	client.puts file_loc	#send back down socket
+	client.close
+	puts "Connection Closed!"
+	
+	#system_folders.each do |files|
 		
 		####Checking if the file exists from the server perspective!!!!!!!!!!!!!
-		
-		puts "File: #{files}"
-		puts "f1#{File.join(currentDir,requested_file)}"
+		#puts "File: #{files}\n"
+		#puts "f1#{File.join(currentDir,requested_file)}"
 		#puts "f2#{File.join(currentDir,filename)}"
-		
-		file_exist = File.exists?(File.join(currentDir,requested_file))#flag to determine if file exists
-		puts "#{filename} exists (True/False):  #{file_exist}"
-		
-	end
+		#pn = Pathname.new(server_loc)
+		#puts "\n pn: #{pn}"
+		#isdir = pn.directory?
+		#puts "serrver loc:  #{server_loc}"
+		#file_exist = File.exists?(requested_file)
+		#file_exist = server_loc#exist?
+		#file_exist = File.exists?(File.join(currentDir,requested_file))#flag to determine if file exists
+		#puts "#{filename} exists (True/False):  #{isdir}"
+	#end
 	
 	
 	
