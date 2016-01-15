@@ -5,6 +5,7 @@ class Proxy
     begin
 	  @server = TCPServer.open('localhost', port )
 	  puts "Client Proxy Server Started with port #{port}"
+	  cache = Hash.new
       loop{	#Loop until client disconnects (e.g. a system shut-down)
 			
 			#Ask user to input their request for further processing
@@ -45,12 +46,17 @@ class Proxy
 					
 					if command == 'READ'
 						
+						lineCount = 0
 						puts "double Check: Command is READ"
 						puts "Reading File"
 						File.open(storage_response.delete!("\n"), "r") do |f|
 						  f.each_line do |line|
+							puts lineCount
 							puts line
+							lineCount = lineCount+1
+							cache[lineCount] = line
 						  end
+						   
 						end
 						puts "Closing File!"
 					elsif command == 'OPEN'
@@ -64,8 +70,8 @@ class Proxy
 						puts "Writing to File"
 						time1 = Time.new
 						File.open(storage_response.delete!("\n"), "w"){ |file| file.write("#{new_content} with timestamp - #{time1.inspect}") }
-						wri = File.readable?(storage_response.delete!("\n"))
-						puts "Writable: #{wri}"
+						#wri = File.readable?(storage_response.delete!("\n"))
+						#puts "Writable: #{wri}"
 						puts "Finished Writing to File.\n File Closed."
 						
 						
@@ -110,7 +116,7 @@ class Proxy
   #Handle user Requests and return an interpretable instruction for the proxy
   def gen_request 
 	puts "\nPlease Specify Command\n"
-	puts "Available Commands:\n <Read~filename>...\n<Write~filename>...\n<Close~filename>...\n<Open~filename>\n"
+	puts "Available Commands:\n <Read=filename>...\n<Write=filename>...\n<Close=filename>...\n<Open=filename>\n"
 	puts "Specify Command:  "
 	input_message = gets.downcase	#take user input from keyboard -> convert lowercase
     file = input_message.partition('=').last	#extract file from user input
@@ -145,6 +151,7 @@ end
 
 #New Client
 require 'socket'      # Sockets are in standard library
+require 'yaml'		  # Used for Client Cache
 hostname = 'localhost'
 port = 3000
 #Create Client Proxy to Handle Communications
