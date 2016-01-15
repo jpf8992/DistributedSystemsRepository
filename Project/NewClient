@@ -28,18 +28,34 @@ class Proxy
 				#Query the Storage Server that holds your desired file
 				if !(dir_message.include?"INVALID")
 					
-					puts "\n\n Establishing Connection with Storage Server ..."
-					storage_port = dir_message[-5..-1].delete!("\n")
-					puts "Server Port: #{storage_port}"
-					puts "Opening Port #{storage_port}"
-					storage_socket = TCPSocket.open('localhost',storage_port)
-					puts "Connection to File Store is active!\n\n"
+					
 					
 					#determine the file the client wants to access
 					filename = user_request.partition('_') [2]
 					file_action = user_request.partition('_')[0]
 					puts "file action : #{file_action}"
 					puts "filename: #{filename}"
+					
+					puts cache[filename]
+					#Query the cache first - if hit, then bypass storage server
+					if (cache[filename] == filename )
+					
+						puts	"TRUE"
+					else
+						puts	"False"
+						puts "KEYS: #{cache.keys[0]}"				#matchin cache with keys
+						#puts "Class: #{cache.keys.class}"
+						
+					end
+					
+					
+					#Connect with Storage Server
+					puts "\n\n Establishing Connection with Storage Server ..."
+					storage_port = dir_message[-5..-1].delete!("\n")
+					puts "Server Port: #{storage_port}"
+					puts "Opening Port #{storage_port}"
+					storage_socket = TCPSocket.open('localhost',storage_port)
+					puts "Connection to File Store is active!\n\n"
 					storage_request = file_action+"_"+filename.delete!("\n")+"_"+client_ID.to_s
 					puts"Storage Request: #{storage_request}\n"
 					
@@ -50,6 +66,10 @@ class Proxy
 						#read Storage Server response
 						storage_response = storage_socket.gets
 						puts "Storage Response:\n\n #{storage_response.colorize(:yellow)}\n\n"
+						
+						#Update cache
+						cache[filename] = storage_response
+					
 					elsif (file_action == "WRITE")
 						storage_socket.puts storage_request	#send "<action>_<filename>_<client_ID>" to storage server
 						storage_response = storage_socket.gets
@@ -58,16 +78,11 @@ class Proxy
 						#Get users input to for the specified file
 						new_update = gets
 						storage_socket.puts new_update
+						
+						#Update Cache
+						cache[filename] = new_update
 					end
-					#Populate the cache
-					#cache[filename] = storage_response
-					#cache[:new_key] = cache.delete :old_key
-					cache[filename] = cache.delete filename
-					
-					#Time.now.strftime('%Y-%m-%d_%H-%M-%S')
-					
-					puts "Cache: #{cache}"#.colorize(:blue)
-					
+										
 					puts "Socket Message Finished."
 					puts "Closing connection with storage_socket..."
 					storage_socket.close

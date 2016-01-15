@@ -60,6 +60,7 @@ loop {                    # Servers run forever
 			
 			#Update the file to the storage server
 			File.open(File.join(currentDir,filename), 'w') { |file| file.write(write_update) }
+			puts " TIME MOD: #{File.mtime(File.join(currentDir,filename))}"
 		end
 		puts "Transmission Now Finished\n Closing Connection to Client"
 	else
