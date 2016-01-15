@@ -34,16 +34,39 @@ class Proxy
 					puts "Opening Port #{storage_port}"
 					storage_socket = TCPSocket.open('localhost',storage_port)
 					puts "Connection to File Store is active!\n\n"
+					
 					#determine the file the client wants to access
 					filename = user_request.partition('_') [2]
+					file_action = user_request.partition('_')[0]
+					puts "file action : #{file_action}"
 					puts "filename: #{filename}"
-					storage_request = filename.delete!("\n")+"_"+client_ID.to_s
+					storage_request = file_action+"_"+filename.delete!("\n")+"_"+client_ID.to_s
 					puts"Storage Request: #{storage_request}\n"
-					storage_socket.puts storage_request	#send "<filename>_<client_ID>" to storage server
 					
-					#read Storage Server response
-					storage_response = storage_socket.gets
-					puts "Storage Response:\n\n #{storage_response.colorize(:red)}\n\n"
+					
+					if (file_action == "READ")
+						storage_socket.puts storage_request	#send "<action>_<filename>_<client_ID>" to storage server
+					
+						#read Storage Server response
+						storage_response = storage_socket.gets
+						puts "Storage Response:\n\n #{storage_response.colorize(:yellow)}\n\n"
+					elsif (file_action == "WRITE")
+						storage_socket.puts storage_request	#send "<action>_<filename>_<client_ID>" to storage server
+						storage_response = storage_socket.gets
+						puts "Storage Response:\n\n #{storage_response.colorize(:red)}\n\n"
+						
+						#Get users input to for the specified file
+						new_update = gets
+						storage_socket.puts new_update
+					end
+					#Populate the cache
+					#cache[filename] = storage_response
+					#cache[:new_key] = cache.delete :old_key
+					cache[filename] = cache.delete filename
+					
+					#Time.now.strftime('%Y-%m-%d_%H-%M-%S')
+					
+					puts "Cache: #{cache}"#.colorize(:blue)
 					
 					puts "Socket Message Finished."
 					puts "Closing connection with storage_socket..."

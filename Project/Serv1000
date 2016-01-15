@@ -1,5 +1,6 @@
 #Server1000
 require 'pathname'
+require 'colorize'
 #Primary Copy
 
 server_name = "Server1000"
@@ -16,11 +17,13 @@ loop {                    # Servers run forever
 	client_message = client.gets
 	puts "Received message from Client: #{client_message}"
 	
-	filename = client_message.partition('_')[0]
-	client_ID = client_message.partition('_')[2]
+	client_action = client_message.partition('_')[0]
+	filename = client_message.partition('_')[2].partition('_')[0]
+	client_ID = client_message.partition('_')[2].partition('_')[2]
 	
 	puts "\nFilename Requested: #{filename}"
-	puts "Client ID making request: #{client_ID}\n"
+	puts "Client ID making request: #{client_ID}"
+	puts "Client Action: #{client_action}\n"
 	
 	#Contact the Locking Server to determine if the client can access the file
 	puts"\nConnecting to Lock Server"
@@ -37,22 +40,31 @@ loop {                    # Servers run forever
 	#NB -> lock_status has been serialised into a string, not a bool
 	if (lock_status.delete!("\n") == "false")
 		puts "permission to access file GRANTED!"
-		
-		puts "Access Directory: #{File.join(currentDir,filename)}"
-		file_dir = File.join(currentDir,filename)
-		file_exist = File.exists?(file_dir)
-		puts "File Exists (True/False): #{file_exist}"
-		
-		File.open(file_dir, "r") do |f|
-			f.each_line do |line|
-			puts line
-			client.puts line	#send text down the socket
+		if (client_action == "READ")
+			puts "Access Directory: #{File.join(currentDir,filename)}"
+			file_dir = File.join(currentDir,filename)
+			file_exist = File.exists?(file_dir)
+			puts "File Exists (True/False): #{file_exist}"
+			
+			File.open(file_dir, "r") do |f|
+				f.each_line do |line|
+				puts line
+				client.puts line	#send text down the socket
+				end
 			end
+		elsif (client_action == "WRITE")
+			#puts "Client WRITE NOTED!!!"
+			client.puts "Please Write your desired text now:!"
+			write_update = client.gets
+			puts write_update.colorize(:blue)
+			
+			#Update the file to the storage server
+			File.open(File.join(currentDir,filename), 'w') { |file| file.write(write_update) }
 		end
-		
 		puts "Transmission Now Finished\n Closing Connection to Client"
 	else
 		puts "permission to access file DENIED!"
+		client.puts "Permission DENIED - Please try again in a few moments"
 	end
 	
 	puts "Disconnecting From Client..."

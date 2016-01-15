@@ -11,7 +11,7 @@ loop{
 
 	Thread.start(server.accept) do |client|
 	
-	locked = false#initialse locks to open
+	locked = false#initialse lock to open
 	
 	#Process incoming request from client
 	storage_message = client.gets
@@ -28,6 +28,7 @@ loop{
 			if((filename == file) && (client_ID == id))
 				puts"Client Already holds lock"
 				locked = false
+		
 			elsif((filename == file) && !(client_ID == id))
 				puts "The file Is Locked by Client ID #{id}"
 				locked = true
@@ -37,7 +38,13 @@ loop{
 			end
 		
 		end
-				
+		
+		if (locked == false)
+			#Add request to locked Database
+			lock_database[filename] = client_ID
+		end
+		puts "Lock Database #{lock_database}"
+		
 		puts "\nSending locked status back to the Storage Server: #{locked}"
 		client.puts locked
 		puts"Sent Status!"
