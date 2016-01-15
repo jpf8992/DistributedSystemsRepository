@@ -15,11 +15,10 @@ loop {                          # Servers run forever
 	message = client.gets
 	puts "Received message from Client: #{message}"
 	filename = message.partition('_').last.delete!("\n")	#remove return character from string
+	action_specified = message.partition('_')[0]
+	puts "\nAction Specified: #{action_specified}"
+	puts "File Specified : #{filename}"
 	
-	
-	
-	
-	#puts "ffilename: #{filename}"
 	#List of all Folders accessible by the network - for this project, it is assumed the scope is the current directory.
 	system_folders = Dir.entries(currentDir).select {|entry| File.directory? File.join(currentDir,entry) and !(entry =='.' || entry == '..') }
 	#puts "type: #{system_folders.class}"
@@ -45,10 +44,21 @@ loop {                          # Servers run forever
 		end
 	end	
 	#Send message back down the socket!
-	if file_exist	#found
-		server_details = foldername
-		client.puts server_details
-		#client.puts File.join(foldername,'_',filename)
+	if (file_exist)	#found and command is read
+		
+		puts "\nSending #{foldername} back to client"
+		client.puts foldername	#name of server that holds file
+		puts "#{foldername} sent!\n"
+		
+		#replica_server_num = rand(1..3)	#random number between 1 and 3 to specify the replicated server to read from
+		#puts "\nRandom Server Num: #{replica_server_num}"
+		#puts "Foldername: #{foldername}"
+		#replica_server = foldername[0...-1] + replica_server_num.to_s	#Specify replica to read from
+		#puts "Read from Replica Server: #{replica_server}"
+		#client.puts replica_server
+	#elsif (file_exist && action_specified=='WRITE')	#must only write files to primary copy
+		#primary_server = "Server1000"
+		#client.puts primary_server
 	else			#not found
 		client.puts "No Such File or Directory"	#default case-the file doesn't exist on the system
 	end

@@ -6,85 +6,57 @@ class Proxy
 	  @server = TCPServer.open('localhost', port )
 	  puts "Client Proxy Server Started with port #{port}"
 	  cache = Hash.new
+	  client_ID = 999
       loop{	#Loop until client disconnects (e.g. a system shut-down)
 			
 			#Ask user to input their request for further processing
 			user_request = gen_request 
-			puts "Action Specified: #{user_request}"
+			puts "User Input Specified: #{user_request}\n"
 						
 			#Handle Request as long as its valid!
 			if !(user_request.include?"INVALID")
-				puts "Handling Request"
+				puts "######################Start Session###############################"
+				puts "\nHandling Request"
 				dir_socket = TCPSocket.open('localhost',2010)   # Socket to listen on port 2010 - Default Dir Server Port
 				dir_socket.puts user_request
 				
-				#Hanlde response from Dir server - should be location of file(if it exists)
+				#Hanlde response from Dir server - should be location of file(if it exists) - 'INVALID' Otherwise
 				dir_message = handle_request dir_socket	#pass socket into requests handler
 				dir_socket.close
-				puts "Dir message : #{dir_message}"
+				puts "Dir message : #{dir_message}"	
 				
 				#Query the Storage Server that holds your desired file
 				if !(dir_message.include?"INVALID")
-					puts "Establishing Connection with Storage Server ..."
+					
+					puts "\n\n Establishing Connection with Storage Server ..."
 					storage_port = dir_message[-5..-1].delete!("\n")
 					puts "Server Port: #{storage_port}"
+					puts "Opening Port #{storage_port}"
 					storage_socket = TCPSocket.open('localhost',storage_port)
-					
+					puts "Connection to File Store is active!\n\n"
 					#determine the file the client wants to access
 					filename = user_request.partition('_') [2]
 					puts "filename: #{filename}"
-					storage_socket.puts filename
+					storage_request = filename.delete!("\n")+"_"+client_ID.to_s
+					puts"Storage Request: #{storage_request}\n"
+					storage_socket.puts storage_request	#send "<filename>_<client_ID>" to storage server
 					
-					#read server response
+					#read Storage Server response
 					storage_response = storage_socket.gets
-					puts "Storage Response: #{storage_response}"
+					puts "Storage Response:\n\n #{storage_response.colorize(:red)}\n\n"
 					
-					#Handle command e.g. read/write/open etc.
-					
-					command = user_request.partition('_') [0]
-					puts "Command:#{command}"
-					
-					if command == 'READ'
-						
-						lineCount = 0
-						puts "double Check: Command is READ"
-						puts "Reading File"
-						File.open(storage_response.delete!("\n"), "r") do |f|
-						  f.each_line do |line|
-							puts lineCount
-							puts line
-							lineCount = lineCount+1
-							cache[lineCount] = line
-						  end
-						   
-						end
-						puts "Closing File!"
-					elsif command == 'OPEN'
-						puts "double Check: Command is OPEN"
-						puts "Opening File"
-						File.open(storage_response.delete!("\n"), "r")
-					else command == 'WRITE'
-						puts "double Check: Command is WRITE\n"
-						puts "Please Specify the new contents of the file:..."
-						new_content = gets
-						puts "Writing to File"
-						time1 = Time.new
-						File.open(storage_response.delete!("\n"), "w"){ |file| file.write("#{new_content} with timestamp - #{time1.inspect}") }
-						#wri = File.readable?(storage_response.delete!("\n"))
-						#puts "Writable: #{wri}"
-						puts "Finished Writing to File.\n File Closed."
-						
-						
-						
-						
-					end
-					
-					
+					puts "Socket Message Finished."
+					puts "Closing connection with storage_socket..."
+					storage_socket.close
+					puts "Storage Socket Closed!"
+					puts "########################End Session##############################\n"
 				else
 					puts "Directory Response: No Valid File!"
+					puts "#######################End Session###############################\n"
 				end
 			else
 				puts "Request Invalid,\n Please Specify Valid Command!"
+				puts "#######################End Session###############################\n"
 			end
       }#.join
 	# CTRL-C
@@ -152,6 +124,7 @@ end
 #New Client
 require 'socket'      # Sockets are in standard library
 require 'yaml'		  # Used for Client Cache
+require 'colorize'
 hostname = 'localhost'
 port = 3000
 #Create Client Proxy to Handle Communications

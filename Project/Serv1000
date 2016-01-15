@@ -1,5 +1,7 @@
 #Server1000
 require 'pathname'
+#Primary Copy
+
 server_name = "Server1000"
 require 'socket'        
 currentDir = File.join(Dir.pwd,server_name)	#This is this represents the folder that this server has access to.
@@ -11,18 +13,67 @@ loop {                    # Servers run forever
 	Thread.start(server.accept) do |client|
     
 	#Process incoming request from client
-	requested_file = client.gets
-	puts "Received message from Client: #{requested_file}"
-	filename = requested_file.partition('_').last.delete!("\n")	#remove return character from string
-	puts "Current Dir: #{currentDir}"
-	#List of all Folders accessible server - scope is the Server1000 folder .
-	system_folders = Dir.entries(currentDir).select {|entry| File.join(currentDir,entry) and !(entry =='.' || entry == '..') }
+	client_message = client.gets
+	puts "Received message from Client: #{client_message}"
 	
-	file_loc = File.join(currentDir,requested_file)
-	puts "File Location: #{file_loc}"
-	client.puts file_loc	#send back down socket
+	filename = client_message.partition('_')[0]
+	client_ID = client_message.partition('_')[2]
+	
+	puts "\nFilename Requested: #{filename}"
+	puts "Client ID making request: #{client_ID}\n"
+	
+	#Contact the Locking Server to determine if the client can access the file
+	puts"\nConnecting to Lock Server"
+	lock_socket = TCPSocket.open('localhost',4000)   # Socket to listen on port 4000 - Default Lock Server Port
+	puts "Connection to Lock Server Active!\n"
+	puts "Sending Request to Lock Server..."
+	lock_socket.puts client_message
+	
+	#Read in Locked Status of file from Lock Server
+	lock_status = lock_socket.gets
+	puts "Lock Status (True/False): #{lock_status}\n\n"
+	puts "Lock Class: #{lock_status.class}"
+	
+	#NB -> lock_status has been serialised into a string, not a bool
+	if (lock_status.delete!("\n") == "false")
+		puts "permission to access file GRANTED!"
+		
+		puts "Access Directory: #{File.join(currentDir,filename)}"
+		file_dir = File.join(currentDir,filename)
+		file_exist = File.exists?(file_dir)
+		puts "File Exists (True/False): #{file_exist}"
+		
+		File.open(file_dir, "r") do |f|
+			f.each_line do |line|
+			puts line
+			client.puts line	#send text down the socket
+			end
+		end
+		
+		puts "Transmission Now Finished\n Closing Connection to Client"
+	else
+		puts "permission to access file DENIED!"
+	end
+	
+	puts "Disconnecting From Client..."
+    client.close                # Disconnect from the client
+	puts "Connection Closed!"
+  
+	
+	
+	
+	
+	#filename = requested_file.partition('_').last.delete!("\n")	#remove return character from string
+	#puts "Current Dir: #{currentDir}"
+	#List of all Folders accessible server - scope is the Server1000 folder .
+	#system_folders = Dir.entries(currentDir).select {|entry| File.join(currentDir,entry) and !(entry =='.' || entry == '..') }
+	
+	#file_loc = File.join(currentDir,requested_file)
+	#puts "File Location: #{file_loc}"
+	#client.puts file_loc	#send back down socket
 	client.close
 	puts "Connection Closed!"
+	
 	
 	#system_folders.each do |files|
 		
@@ -46,8 +97,5 @@ loop {                    # Servers run forever
 	
 	
 	
-	#puts "Disconnecting From Client..."
-    #client.close                # Disconnect from the client
-	#puts "Connection Closed!"
-  
+	
 }
