@@ -57,7 +57,6 @@ class Proxy
 						puts "Opening Port #{storage_port}"
 						storage_socket = TCPSocket.open('localhost',storage_port)
 						puts "Connection to File Store is active!\n\n"
-						#storage_request = file_action+"_"+filename.delete!("\n")+"_"+client_ID.to_s		#Deleted \n earlier
 						storage_request = file_action+"_"+filename+"_"+client_ID.to_s
 						puts"Storage Request: #{storage_request}\n"
 						
@@ -71,8 +70,8 @@ class Proxy
 							
 							#Update cache
 							cache[filename] = storage_response
-							#cache_time = 
-						
+							cache_time = Time.now
+							
 						elsif (file_action == "WRITE")
 							storage_socket.puts storage_request	#send "<action>_<filename>_<client_ID>" to storage server
 							storage_response = storage_socket.gets
@@ -167,7 +166,6 @@ end
 
 #New Client
 require 'socket'      # Sockets are in standard library
-#require 'yaml'		  # Used for Client Cache
 require 'colorize'
 hostname = 'localhost'
 port = 3000

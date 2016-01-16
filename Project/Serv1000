@@ -17,10 +17,11 @@ loop {                    # Servers run forever
 	client_message = client.gets
 	puts "Received message from Client: #{client_message}"
 	
+	#Determine Message Attributes
 	client_action = client_message.partition('_')[0]
 	filename = client_message.partition('_')[2].partition('_')[0]
 	client_ID = client_message.partition('_')[2].partition('_')[2]
-	
+	#Output Message Attributes
 	puts "\nFilename Requested: #{filename}"
 	puts "Client ID making request: #{client_ID}"
 	puts "Client Action: #{client_action}\n"
@@ -71,44 +72,6 @@ loop {                    # Servers run forever
 	puts "Disconnecting From Client..."
     client.close                # Disconnect from the client
 	puts "Connection Closed!"
-  
 	
-	
-	
-	
-	#filename = requested_file.partition('_').last.delete!("\n")	#remove return character from string
-	#puts "Current Dir: #{currentDir}"
-	#List of all Folders accessible server - scope is the Server1000 folder .
-	#system_folders = Dir.entries(currentDir).select {|entry| File.join(currentDir,entry) and !(entry =='.' || entry == '..') }
-	
-	#file_loc = File.join(currentDir,requested_file)
-	#puts "File Location: #{file_loc}"
-	#client.puts file_loc	#send back down socket
-	client.close
-	puts "Connection Closed!"
-	
-	
-	#system_folders.each do |files|
-		
-		####Checking if the file exists from the server perspective!!!!!!!!!!!!!
-		#puts "File: #{files}\n"
-		#puts "f1#{File.join(currentDir,requested_file)}"
-		#puts "f2#{File.join(currentDir,filename)}"
-		#pn = Pathname.new(server_loc)
-		#puts "\n pn: #{pn}"
-		#isdir = pn.directory?
-		#puts "serrver loc:  #{server_loc}"
-		#file_exist = File.exists?(requested_file)
-		#file_exist = server_loc#exist?
-		#file_exist = File.exists?(File.join(currentDir,requested_file))#flag to determine if file exists
-		#puts "#{filename} exists (True/False):  #{isdir}"
-	#end
-	
-	
-	
-	end
-	
-	
-	
-	
+end
 }

@@ -4,7 +4,6 @@ require 'socket'
 port = 4000
 server = TCPServer.new(port)   
 puts "Lock ServerCreated on port: #{port}"
-
 lock_database = Hash.new	#Empty Hash Table
 
 loop{
@@ -21,14 +20,12 @@ loop{
 	puts "\nFilename Requested: #{filename}"
 	puts "Client ID making request: #{client_ID}\n"
 	
-	
 		#Sweep hash to see if lock exits
 		lock_database.each do |file,id|
 			
 			if((filename == file) && (client_ID == id))
 				puts"Client Already holds lock"
 				locked = false
-		
 			elsif((filename == file) && !(client_ID == id))
 				puts "The file Is Locked by Client ID #{id}"
 				locked = true
@@ -36,7 +33,6 @@ loop{
 				#keep iterating
 				locked = false
 			end
-		
 		end
 		
 		if (locked == false)
@@ -44,17 +40,14 @@ loop{
 			lock_database[filename] = client_ID
 		end
 		puts "Lock Database #{lock_database}"
-		
 		puts "\nSending locked status back to the Storage Server: #{locked}"
 		client.puts locked
 		puts"Sent Status!"
-
+		
+		#Close Connection
 		puts "Disconnecting..."
 		client.close
 		puts"Disconnedted!"
-
-
-
-	end
+end
 }
 

@@ -1,7 +1,7 @@
 #--Directory Server--#
 
 #What should the Directory Server do?
-#A user request to open a particular file X should be passed by the client proxy to the directory server for resolution. The returned file identifier should identify the server actually holding the file (or perhaps, servers, if you have decided to expose replication to client proxies) and the name of the file on that server.
+#A user request to open a particular file X should be passed by the client proxy to the directory server for resolution. The returned file identifier should identify the server actually holding the file.
 
 require 'socket'        #Get sockets from stdlib
 currentDir = Dir.pwd	#Current Directory(default) - This can be modified to any directory to simulate server storage anywhere on the 		machine
@@ -21,8 +21,6 @@ loop {                          # Servers run forever
 	
 	#List of all Folders accessible by the network - for this project, it is assumed the scope is the current directory.
 	system_folders = Dir.entries(currentDir).select {|entry| File.directory? File.join(currentDir,entry) and !(entry =='.' || entry == '..') }
-	#puts "type: #{system_folders.class}"
-	
 	file_exist = false	#initialise
 	foldername = ""		#initialise
 	
@@ -49,16 +47,6 @@ loop {                          # Servers run forever
 		puts "\nSending #{foldername} back to client"
 		client.puts foldername	#name of server that holds file
 		puts "#{foldername} sent!\n"
-		
-		#replica_server_num = rand(1..3)	#random number between 1 and 3 to specify the replicated server to read from
-		#puts "\nRandom Server Num: #{replica_server_num}"
-		#puts "Foldername: #{foldername}"
-		#replica_server = foldername[0...-1] + replica_server_num.to_s	#Specify replica to read from
-		#puts "Read from Replica Server: #{replica_server}"
-		#client.puts replica_server
-	#elsif (file_exist && action_specified=='WRITE')	#must only write files to primary copy
-		#primary_server = "Server1000"
-		#client.puts primary_server
 	else			#not found
 		client.puts "No Such File or Directory"	#default case-the file doesn't exist on the system
 	end
