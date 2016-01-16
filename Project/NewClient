@@ -6,7 +6,9 @@ class Proxy
 	  @server = TCPServer.open('localhost', port )
 	  puts "Client Proxy Server Started with port #{port}"
 	  cache = Hash.new
+	  cache_time = Time.new
 	  client_ID = 999
+	  
       loop{	#Loop until client disconnects (e.g. a system shut-down)
 			
 			#Ask user to input their request for further processing
@@ -28,66 +30,70 @@ class Proxy
 				#Query the Storage Server that holds your desired file
 				if !(dir_message.include?"INVALID")
 					
-					
-					
 					#determine the file the client wants to access
 					filename = user_request.partition('_') [2]
+					filename = filename.delete!("\n")
 					file_action = user_request.partition('_')[0]
-					puts "file action : #{file_action}"
-					puts "filename: #{filename}"
+					puts "file action : #{file_action}".colorize(:light_blue)
+					puts "filename: #{filename}".colorize(:light_blue)
 					
-					puts cache[filename]
-					#Query the cache first - if hit, then bypass storage server
-					if (cache[filename] == filename )
-					
-						puts	"TRUE"
-					else
-						puts	"False"
-						puts "KEYS: #{cache.keys[0]}"				#matchin cache with keys
-						#puts "Class: #{cache.keys.class}"
+					#FRESH CACHE HIT#
+					if ( file_action == "READ" && !(cache.empty?) && cache.keys[0] == filename && cache_time.to_i <= File.mtime(File.join(Dir.pwd,'Server1000',cache.keys[0])).to_i )	
 						
-					end
-					
-					
-					#Connect with Storage Server
-					puts "\n\n Establishing Connection with Storage Server ..."
-					storage_port = dir_message[-5..-1].delete!("\n")
-					puts "Server Port: #{storage_port}"
-					puts "Opening Port #{storage_port}"
-					storage_socket = TCPSocket.open('localhost',storage_port)
-					puts "Connection to File Store is active!\n\n"
-					storage_request = file_action+"_"+filename.delete!("\n")+"_"+client_ID.to_s
-					puts"Storage Request: #{storage_request}\n"
-					
-					
-					if (file_action == "READ")
-						storage_socket.puts storage_request	#send "<action>_<filename>_<client_ID>" to storage server
-					
-						#read Storage Server response
-						storage_response = storage_socket.gets
-						puts "Storage Response:\n\n #{storage_response.colorize(:yellow)}\n\n"
+						puts "CACHE HIT :TRUE".colorize(:light_blue)
+						puts "Cached File: #{cache.keys[0]}. Last Modified: #{File.mtime(File.join(Dir.pwd,'Server1000',cache.keys[0]))}".colorize(:light_blue)
+						puts "Filename Sought: #{filename}".colorize(:light_blue)
+						puts "Using Cache File".colorize(:light_blue)
+						puts "File Conents:\n #{cache[filename]}\n".colorize(:cyan)
 						
-						#Update cache
-						cache[filename] = storage_response
-					
-					elsif (file_action == "WRITE")
-						storage_socket.puts storage_request	#send "<action>_<filename>_<client_ID>" to storage server
-						storage_response = storage_socket.gets
-						puts "Storage Response:\n\n #{storage_response.colorize(:red)}\n\n"
+					#STALE CACHE HIT#	
+					else	#stale - must query storage database directly
+						puts "CACHE HIT :False".colorize(:magenta)
 						
-						#Get users input to for the specified file
-						new_update = gets
-						storage_socket.puts new_update
+						#Connect with Storage Server
+						puts "\n\n Establishing Connection with Storage Server ..."
+						storage_port = dir_message[-5..-1].delete!("\n")
+						puts "Server Port: #{storage_port}"
+						puts "Opening Port #{storage_port}"
+						storage_socket = TCPSocket.open('localhost',storage_port)
+						puts "Connection to File Store is active!\n\n"
+						#storage_request = file_action+"_"+filename.delete!("\n")+"_"+client_ID.to_s		#Deleted \n earlier
+						storage_request = file_action+"_"+filename+"_"+client_ID.to_s
+						puts"Storage Request: #{storage_request}\n"
 						
-						#Update Cache
-						cache[filename] = new_update
-					end
+						
+						if (file_action == "READ")
+							storage_socket.puts storage_request	#send "<action>_<filename>_<client_ID>" to storage server
+						
+							#read Storage Server response
+							storage_response = storage_socket.gets
+							puts "Storage Response:\n\n #{storage_response.colorize(:yellow)}\n\n"
+							
+							#Update cache
+							cache[filename] = storage_response
+							#cache_time = 
+						
+						elsif (file_action == "WRITE")
+							storage_socket.puts storage_request	#send "<action>_<filename>_<client_ID>" to storage server
+							storage_response = storage_socket.gets
+							puts "Storage Response:\n\n #{storage_response.colorize(:red)}\n\n"
+							
+							#Get users input to for the specified file
+							new_update = gets
+							storage_socket.puts new_update
+							
+							#Update Cache
+							cache[filename] = new_update
+							cache_time = Time.now
+							puts "Time File Updated: #{cache_time}"
+						end
 										
 					puts "Socket Message Finished."
 					puts "Closing connection with storage_socket..."
 					storage_socket.close
 					puts "Storage Socket Closed!"
 					puts "########################End Session##############################\n"
+					end
 				else
 					puts "Directory Response: No Valid File!"
 					puts "#######################End Session###############################\n"
@@ -161,7 +167,7 @@ end
 
 #New Client
 require 'socket'      # Sockets are in standard library
-require 'yaml'		  # Used for Client Cache
+#require 'yaml'		  # Used for Client Cache
 require 'colorize'
 hostname = 'localhost'
 port = 3000
