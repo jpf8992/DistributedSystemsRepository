@@ -1,0 +1,53 @@
+#Locking Server
+
+require 'socket'
+port = 4000
+server = TCPServer.new(port)   
+puts "Lock ServerCreated on port: #{port}"
+lock_database = Hash.new	#Empty Hash Table
+
+loop{
+
+	Thread.start(server.accept) do |client|
+	
+	locked = false#initialse lock to open
+	
+	#Process incoming request from client
+	storage_message = client.gets
+	puts "Received message from Client: #{storage_message}"
+	filename = storage_message.partition('_')[0]
+	client_ID = storage_message.partition('_')[2]
+	puts "\nFilename Requested: #{filename}"
+	puts "Client ID making request: #{client_ID}\n"
+	
+		#Sweep hash to see if lock exits
+		lock_database.each do |file,id|
+			
+			if((filename == file) && (client_ID == id))
+				puts"Client Already holds lock"
+				locked = false
+			elsif((filename == file) && !(client_ID == id))
+				puts "The file Is Locked by Client ID #{id}"
+				locked = true
+			else
+				#keep iterating
+				locked = false
+			end
+		end
+		
+		if (locked == false)
+			#Add request to locked Database
+			lock_database[filename] = client_ID
+		end
+		puts "Lock Database #{lock_database}"
+		puts "\nSending locked status back to the Storage Server: #{locked}"
+		client.puts locked
+		puts"Sent Status!"
+		
+		#Close Connection
+		puts "Disconnecting..."
+		client.close
+		puts"Disconnedted!"
+end
+}
+

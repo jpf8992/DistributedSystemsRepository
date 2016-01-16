@@ -1,0 +1,77 @@
+#Server1000
+require 'pathname'
+require 'colorize'
+#Primary Copy
+
+server_name = "Server1000"
+require 'socket'        
+currentDir = File.join(Dir.pwd,server_name)	#This is this represents the folder that this server has access to.
+port = 1000									#Arbitrary port for Storage Server
+server = TCPServer.new(port)   
+puts "Storage ServerCreated on port: #{port}"
+loop {                    # Servers run forever
+  
+	Thread.start(server.accept) do |client|
+    
+	#Process incoming request from client
+	client_message = client.gets
+	puts "Received message from Client: #{client_message}"
+	
+	#Determine Message Attributes
+	client_action = client_message.partition('_')[0]
+	filename = client_message.partition('_')[2].partition('_')[0]
+	client_ID = client_message.partition('_')[2].partition('_')[2]
+	#Output Message Attributes
+	puts "\nFilename Requested: #{filename}"
+	puts "Client ID making request: #{client_ID}"
+	puts "Client Action: #{client_action}\n"
+	
+	#Contact the Locking Server to determine if the client can access the file
+	puts"\nConnecting to Lock Server"
+	lock_socket = TCPSocket.open('localhost',4000)   # Socket to listen on port 4000 - Default Lock Server Port
+	puts "Connection to Lock Server Active!\n"
+	puts "Sending Request to Lock Server..."
+	lock_socket.puts client_message
+	
+	#Read in Locked Status of file from Lock Server
+	lock_status = lock_socket.gets
+	puts "Lock Status (True/False): #{lock_status}\n\n"
+	puts "Lock Class: #{lock_status.class}"
+	
+	#NB -> lock_status has been serialised into a string, not a bool
+	if (lock_status.delete!("\n") == "false")
+		puts "permission to access file GRANTED!"
+		if (client_action == "READ")
+			puts "Access Directory: #{File.join(currentDir,filename)}"
+			file_dir = File.join(currentDir,filename)
+			file_exist = File.exists?(file_dir)
+			puts "File Exists (True/False): #{file_exist}"
+			
+			File.open(file_dir, "r") do |f|
+				f.each_line do |line|
+				puts line
+				client.puts line	#send text down the socket
+				end
+			end
+		elsif (client_action == "WRITE")
+			#puts "Client WRITE NOTED!!!"
+			client.puts "Please Write your desired text now:!"
+			write_update = client.gets
+			puts write_update.colorize(:blue)
+			
+			#Update the file to the storage server
+			File.open(File.join(currentDir,filename), 'w') { |file| file.write(write_update) }
+			puts " TIME MOD: #{File.mtime(File.join(currentDir,filename))}"
+		end
+		puts "Transmission Now Finished\n Closing Connection to Client"
+	else
+		puts "permission to access file DENIED!"
+		client.puts "Permission DENIED - Please try again in a few moments"
+	end
+	
+	puts "Disconnecting From Client..."
+    client.close                # Disconnect from the client
+	puts "Connection Closed!"
+	
+end
+}

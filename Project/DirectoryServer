@@ -1,0 +1,57 @@
+#--Directory Server--#
+
+#What should the Directory Server do?
+#A user request to open a particular file X should be passed by the client proxy to the directory server for resolution. The returned file identifier should identify the server actually holding the file.
+
+require 'socket'        #Get sockets from stdlib
+currentDir = Dir.pwd	#Current Directory(default) - This can be modified to any directory to simulate server storage anywhere on the 		machine
+port = 2010				#Arbitrary port for Dir Server
+server = TCPServer.new(port)   	# Socket to listen on port 2010
+puts "Directory Server Created on port: #{port}"
+loop {                          # Servers run forever
+  Thread.start(server.accept) do |client|
+    
+	#Process incoming message from client
+	message = client.gets
+	puts "Received message from Client: #{message}"
+	filename = message.partition('_').last.delete!("\n")	#remove return character from string
+	action_specified = message.partition('_')[0]
+	puts "\nAction Specified: #{action_specified}"
+	puts "File Specified : #{filename}"
+	
+	#List of all Folders accessible by the network - for this project, it is assumed the scope is the current directory.
+	system_folders = Dir.entries(currentDir).select {|entry| File.directory? File.join(currentDir,entry) and !(entry =='.' || entry == '..') }
+	file_exist = false	#initialise
+	foldername = ""		#initialise
+	
+	if (filename != "") #only search if there is a file specified
+		
+		#Iterate through each folder to find file
+		system_folders.each do |folder|								
+			puts "\nDisplaying Contents of: #{folder}"
+			puts "CurrentDir: #{File.join(currentDir,folder)}"
+			file_exist = File.exists?(File.join(currentDir,folder,filename))#flag to determine if file exists
+			puts "#{filename} exists (True/False):  #{file_exist}"
+			if file_exist
+				puts "File IS in the System #{folder}\n"
+				foldername = folder
+				break#exit .each loop
+			else 
+				puts "File NOT in System #{folder}\n"
+			end
+		end
+	end	
+	#Send message back down the socket!
+	if (file_exist)	#found and command is read
+		
+		puts "\nSending #{foldername} back to client"
+		client.puts foldername	#name of server that holds file
+		puts "#{foldername} sent!\n"
+	else			#not found
+		client.puts "No Such File or Directory"	#default case-the file doesn't exist on the system
+	end
+	puts "Closing Connection..."
+    client.close                # Disconnect from the client
+	puts "Connection Closed!"
+  end
+}
